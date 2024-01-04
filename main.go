@@ -10,7 +10,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", RootHandler)
-	mux.HandleFunc("hello-world", HwHandler)
+	mux.HandleFunc("/hello-world", HwHandler)
 
 	var port int = 8080
 
