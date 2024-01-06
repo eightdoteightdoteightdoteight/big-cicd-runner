@@ -20,6 +20,7 @@ func main() {
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
+	// readYaml("test.yaml")
 }
 
 func RootHandler(w http.ResponseWriter, r *http.Request) {
