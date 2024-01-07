@@ -24,6 +24,13 @@ func main() {
 
 func RootHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the home page!")
+
+	pipeline, err := readYaml("test.yml")
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	print(pipeline.StagesList[0]) // should print stage1
 }
 
 // HelloHandler handles requests to the "/hello" endpoint
