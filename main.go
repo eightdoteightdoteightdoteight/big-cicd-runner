@@ -16,21 +16,17 @@ func main() {
 
 	fmt.Printf("Server is running on port :%d...\n", port)
 
-	err := http.ListenAndServe(fmt.Sprintf(":%d", port), mux)
-	if err != nil {
-		fmt.Println("Error:", err)
+	var pathToYaml string = "test.yml"
+	stagesExecution(pathToYaml)
+
+	errWeb := http.ListenAndServe(fmt.Sprintf(":%d", port), mux)
+	if errWeb != nil {
+		fmt.Println("Error:", errWeb)
 	}
 }
 
 func RootHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the home page!")
-
-	pipeline, err := readYaml("test.yml")
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
-	print(pipeline.StagesList[0]) // should print stage1
 }
 
 // HelloHandler handles requests to the "/hello" endpoint
