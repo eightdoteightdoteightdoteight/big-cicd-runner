@@ -13,11 +13,11 @@ import (
 )
 
 type JobResult struct {
-	ID     string    `json:"id"`
-	Logs   string    `json:"logs"`
-	Status string    `json:"status"`
-	Date   time.Time `json:"date"`
-	Stage  string    `json:"stage"`
+	ID     string `json:"id"`
+	Logs   string `json:"logs"`
+	Status string `json:"status"`
+	Date   string `json:"date"`
+	Stage  string `json:"stage"`
 }
 
 type Pipeline struct {
@@ -47,7 +47,7 @@ func readYaml(path string) (Pipeline, error) { // path is currently test.yml
 	return pipeline, err
 }
 
-func stagesExecution(path string) {
+func stagesExecution(path string, jobID string) {
 	pipeline, err := readYaml(path)
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -66,19 +66,21 @@ func stagesExecution(path string) {
 
 			if err != nil {
 				fmt.Println("Erreur lors de l'exécution de la commande:", string(output))
+				sendPostRequest(jobID, string(output), "Error", time.Now().Format(time.RFC3339), stageName)
 				break
 			}
 
-			// Affichez la sortie de la commande
+			// Affichage de la sortie de la commande
 			fmt.Println("Sortie de la commande:")
 			fmt.Println(string(output))
+			sendPostRequest(jobID, string(output), "Sucess", time.Now().Format(time.RFC3339), stageName)
 		}
 
 		fmt.Println() // Ligne vide entre les étapes pour une meilleure lisibilité
 	}
 }
 
-func sendPostRequest(jobID, logs, status string, date time.Time, stage string) {
+func sendPostRequest(jobID, logs, status string, date string, stage string) {
 	// Create the payload
 	payload := JobResult{
 		ID:     jobID,
@@ -96,7 +98,7 @@ func sendPostRequest(jobID, logs, status string, date time.Time, stage string) {
 	}
 
 	// Make the POST request
-	url := fmt.Sprintf("http://localhost:8080/v1/test") // Update with your actual endpoint
+	url := fmt.Sprintf("http://localhost:8081/v1/test") // Update with your actual endpoint
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		fmt.Println("Error sending POST request:", err)

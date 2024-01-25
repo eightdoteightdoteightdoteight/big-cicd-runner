@@ -6,16 +6,17 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 )
 
 type CiCdRequest struct {
-	ID       int    `json:"id"`
+	ID       string `json:"id"`
 	RepoName string `json:"repository"`
 	CommitID string `json:"ref"`
 }
 
 type CdRequest struct {
-	ID        int    `json:"id"`
+	ID        string `json:"id"`
 	imageName string `json:"image"`
 	tag       string `json:"tag"`
 }
@@ -36,11 +37,23 @@ func main() {
 	}
 }
 
+func folderExists(folderPath string) (bool, error) {
+	_, err := os.Stat(folderPath)
+
+	if err == nil {
+		return true, nil // Folder exists
+	}
+
+	if os.IsNotExist(err) {
+		return false, nil // Folder doesn't exist
+	}
+
+	return false, err
+}
+
 func CiCdHandler(w http.ResponseWriter, r *http.Request) {
-	// Vérifier que la méthode de la requête est POST
+	// Vérifier que la méthode de la requête est un POST
 	if r.Method != http.MethodPost {
-		pathToYaml := "test.yml"
-		stagesExecution(pathToYaml)
 		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 		return
 	}
@@ -66,12 +79,20 @@ func CiCdHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Requête POST traitée avec succès"))
 
-	pathToYaml := ""
-	stagesExecution(pathToYaml)
+	pathToYaml := "test.yml"
+	stagesExecution(pathToYaml, requestData.ID)
+
+	if exists, err := folderExists(requestData.RepoName); err != nil {
+		fmt.Println("Error:", err)
+	} else if exists {
+		fmt.Printf("Le dossier %s existe.\n (faut faire un git fetch -all)", requestData.RepoName)
+	} else {
+		fmt.Printf("Le dossier %s n'existe pas.\n(faut faire un git clone)", requestData.RepoName)
+	}
 }
 
 func CdHandler(w http.ResponseWriter, r *http.Request) {
-	// Vérifier que la méthode de la requête est POST
+	// Vérifier que la méthode de la requête est un POST
 	if r.Method != http.MethodPost {
 		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 		return
@@ -97,4 +118,5 @@ func CdHandler(w http.ResponseWriter, r *http.Request) {
 	// Répondre au client
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Requête POST traitée avec succès"))
+
 }
