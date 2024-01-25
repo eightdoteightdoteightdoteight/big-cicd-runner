@@ -7,18 +7,19 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 )
 
-type CiCdRequest struct {
+type CiCdRequestBody struct {
 	ID       string `json:"id"`
 	RepoName string `json:"repository"`
 	CommitID string `json:"ref"`
 }
 
-type CdRequest struct {
-	ID        string `json:"id"`
-	imageName string `json:"image"`
-	tag       string `json:"tag"`
+type CdRequestBody struct {
+	Id    string `json:"id"`
+	Image string `json:"image"`
+	Tag   string `json:"tag"`
 }
 
 func main() {
@@ -52,71 +53,70 @@ func folderExists(folderPath string) (bool, error) {
 }
 
 func CiCdHandler(w http.ResponseWriter, r *http.Request) {
-	// Vérifier que la méthode de la requête est un POST
-	if r.Method != http.MethodPost {
-		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
-		return
-	}
+	if r.Method == http.MethodPost {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Erreur lors de la lecture du corps de la requête", http.StatusBadRequest)
+			return
+		}
+		fmt.Printf("Corps de la requête : %s\n", string(body))
 
-	// Lire le body
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Erreur lors de la lecture du corps de la requête", http.StatusInternalServerError)
-		return
-	}
+		var requestData CiCdRequestBody
 
-	var requestData CiCdRequest
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Requête POST traitée avec succès"))
 
-	err = json.Unmarshal(body, &requestData)
-	if err != nil {
-		http.Error(w, "Erreur lors du décodage du JSON", http.StatusBadRequest)
-		return
-	}
+		repoURL := "https://github.com/" + requestData.RepoName + ".git"
 
-	fmt.Printf("ID: %d, imageName: %s, tag: %s\n", requestData.ID, requestData.RepoName, requestData.CommitID)
+		if exists, err := folderExists(requestData.RepoName); err != nil {
+			fmt.Println("Error:", err)
+			return
+		} else if exists {
+			cmd := exec.Command("git", "-C", requestData.RepoName, "fetch", "--all")
+			output, err := cmd.CombinedOutput()
+			if err != nil {
+				fmt.Println("Erreur lors de l'exécution de la commande:", string(output))
+			}
+		} else {
+			cmd := exec.Command("git", "clone", repoURL)
+			output, err := cmd.CombinedOutput()
+			if err != nil {
+				fmt.Println("Erreur lors de l'exécution de la commande:", string(output))
+			}
+		}
 
-	// Répondre au client
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Requête POST traitée avec succès"))
+		pathToYaml := requestData.RepoName + "/big_ci.yml"
+		stagesExecution(pathToYaml, requestData.ID)
 
-	pathToYaml := "test.yml"
-	stagesExecution(pathToYaml, requestData.ID)
-
-	if exists, err := folderExists(requestData.RepoName); err != nil {
-		fmt.Println("Error:", err)
-	} else if exists {
-		fmt.Printf("Le dossier %s existe.\n (faut faire un git fetch -all)", requestData.RepoName)
 	} else {
-		fmt.Printf("Le dossier %s n'existe pas.\n(faut faire un git clone)", requestData.RepoName)
+		fmt.Println("Méthode non autorisée")
+		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 	}
 }
 
 func CdHandler(w http.ResponseWriter, r *http.Request) {
-	// Vérifier que la méthode de la requête est un POST
-	if r.Method != http.MethodPost {
+	if r.Method == http.MethodPost {
+		var requestBody CdRequestBody
+		decoder := json.NewDecoder(r.Body)
+		if err := decoder.Decode(&requestBody); err != nil {
+			fmt.Printf("Erreur de décodage JSON : %v\n", err)
+			http.Error(w, "Erreur lors du décodage du corps JSON", http.StatusBadRequest)
+			return
+		}
+		fmt.Printf("Valeurs après décodage : %+v\n", requestBody)
+
+		id := requestBody.Id
+		image := requestBody.Image
+		tag := requestBody.Tag
+
+		fmt.Printf("Pipeline id: %s\n", id)
+		fmt.Printf("Image: %s\n", image)
+		fmt.Printf("Tag: %s\n", tag)
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Requête POST traitée avec succès"))
+	} else {
+		fmt.Println("Méthode non autorisée")
 		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
-		return
 	}
-
-	// Lire le body
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Erreur lors de la lecture du corps de la requête", http.StatusInternalServerError)
-		return
-	}
-
-	var requestData CdRequest
-
-	err = json.Unmarshal(body, &requestData)
-	if err != nil {
-		http.Error(w, "Erreur lors du décodage du JSON", http.StatusBadRequest)
-		return
-	}
-
-	fmt.Printf("ID: %d, imageName: %s, tag: %s\n", requestData.ID, requestData.imageName, requestData.tag)
-
-	// Répondre au client
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Requête POST traitée avec succès"))
-
 }
