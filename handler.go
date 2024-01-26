@@ -96,7 +96,7 @@ func CdHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Image: %s\n", image)
 		fmt.Printf("Tag: %s\n", tag)
 
-		if err := updateDeployment("imt-framework-staging", image, tag); err != nil {
+		if err := patchDeployment("imt-framework-staging", image, tag); err != nil {
 			fmt.Println("Error:", err)
 			http.Error(w, "Erreur lors du déploiement", http.StatusInternalServerError)
 			return
