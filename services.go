@@ -27,7 +27,7 @@ func sendJobResult(jobID string, name string, logs string, status string) {
 		return
 	}
 
-	url := fmt.Sprintf("https://cicd-back.nathanaudvard.fr/v1/jobs/%s", jobID)
+	url := fmt.Sprintf("http://cicd-back-service:8080/v1/jobs/%s", jobID)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		fmt.Println("Error sending POST request:", err)
@@ -44,7 +44,7 @@ func sendJobResult(jobID string, name string, logs string, status string) {
 }
 
 func finishPipeline(jobID string) {
-	url := fmt.Sprintf("https://cicd-back.nathanaudvard.fr/v1/pipelines/%s/finish", jobID)
+	url := fmt.Sprintf("http://cicd-back-service:8080/v1/pipelines/%s/finish", jobID)
 	_, err := http.Post(url, "application/json", nil)
 	if err != nil {
 		fmt.Println("Error sending POST request:", err)
