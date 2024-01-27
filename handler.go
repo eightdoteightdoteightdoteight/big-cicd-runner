@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os/exec"
+	"strings"
 )
 
 type CiCdRequestBody struct {
@@ -82,16 +83,30 @@ func CdHandler(w http.ResponseWriter, r *http.Request) {
 		image := requestData.Image
 		tag := requestData.Tag
 
-		if err := updateDeployment("imt-framework-staging", image, tag); err != nil {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Requête POST traitée avec succès"))
+
+		oldImage, err := updateDeployment("imt-framework-staging", image, tag)
+		if err != nil {
 			fmt.Println("Error:", err)
 			http.Error(w, "Erreur lors du déploiement", http.StatusInternalServerError)
 			return
 		}
+		sendJobResult(id, "Déploiement sur Kubernetes", "Déploiement terminé sur imt-framework-staging", "Success")
 
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Requête POST traitée avec succès"))
+		if health := isHealthy("imt-framework-staging", image); health {
+			sendJobResult(id, "Tests de santé", "Les tests de santé ont été réussis", "Success")
+		} else {
+			sendJobResult(id, "Tests de santé", "Les tests de santé ont échoué", "Failed")
+			oldImageSplit := strings.Split(oldImage, ":")
+			if _, err := updateDeployment("imt-framework-staging", oldImageSplit[0], oldImageSplit[1]); err != nil {
+				fmt.Println("Error:", err)
+				http.Error(w, "Erreur lors du rollback", http.StatusInternalServerError)
+				return
+			}
+			sendJobResult(id, "Rollback", fmt.Sprintf("Rollback effectué à la version %s", oldImageSplit[1]), "Success")
+		}
 
-		sendJobResult(id, "Deploy", "Déploiement terminé sur imt-framework-staging", "Success")
 		finishPipeline(id)
 	} else {
 		fmt.Println("Méthode non autorisée")

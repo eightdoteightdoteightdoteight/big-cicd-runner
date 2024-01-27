@@ -51,3 +51,13 @@ func finishPipeline(jobID string) {
 		return
 	}
 }
+
+func isHealthy(namespace, name string) bool {
+	url := fmt.Sprintf("http://%s-service.%s.svc.cluster.local:8080/actuator/health", name, namespace)
+	resp, err := http.Get(url)
+	if err != nil {
+		fmt.Println("Error sending GET request:", err)
+		return false
+	}
+	return resp.StatusCode == http.StatusOK
+}

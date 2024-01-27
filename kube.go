@@ -8,7 +8,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func updateDeployment(namespace string, image string, tag string) error {
+func updateDeployment(namespace string, image string, tag string) (string, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err)
@@ -26,7 +26,9 @@ func updateDeployment(namespace string, image string, tag string) error {
 		panic(err)
 	}
 
+	oldImage := result.Spec.Template.Spec.Containers[0].Image
+
 	result.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("registry.nathanaudvard.fr/%s:%s", image, tag)
 	_, err = deploymentsClient.Update(context.TODO(), result, metav1.UpdateOptions{})
-	return err
+	return oldImage, err
 }
