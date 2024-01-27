@@ -22,15 +22,8 @@ func updateDeployment(namespace string, image string, tag string) error {
 
 	deploymentsClient := clientset.AppsV1().Deployments(namespace)
 
-	/*result, err := deploymentsClient.Get(context.TODO(), fmt.Sprintf("%s-deployment", image), metav1.GetOptions{})
-	if err != nil {
-		panic(err)
-	}*/
-
 	patch := fmt.Sprintf(`{"spec":{"template":{"spec":{"containers":[{"name":"%s","image":"%s:%s"}]}}}}`, image, image, tag)
 	_, err = deploymentsClient.Patch(context.TODO(), fmt.Sprintf("%s-deployment", image), types.StrategicMergePatchType, []byte(patch), metav1.PatchOptions{})
 
-	//result.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("registry.nathanaudvard.fr/%s:%s", image, tag)
-	//_, err = deploymentsClient.Update(context.TODO(), result, metav1.UpdateOptions{})
 	return err
 }

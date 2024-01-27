@@ -64,21 +64,11 @@ func CiCdHandler(w http.ResponseWriter, r *http.Request) {
 
 func CdHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		/*var requestBody CdRequestBody
-		decoder := json.NewDecoder(r.Body)
-		if err := decoder.Decode(&requestBody); err != nil {
-			fmt.Printf("Erreur de décodage JSON : %v\n", err)
-			http.Error(w, "Erreur lors du décodage du corps JSON", http.StatusBadRequest)
-			return
-		}
-		fmt.Printf("Valeurs après décodage : %+v\n", requestBody)*/
-
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Erreur lors de la lecture du corps de la requête", http.StatusBadRequest)
 			return
 		}
-		fmt.Printf("Corps de la requête : %s\n", string(body))
 
 		var requestData CdRequestBody
 
@@ -92,10 +82,6 @@ func CdHandler(w http.ResponseWriter, r *http.Request) {
 		image := requestData.Image
 		tag := requestData.Tag
 
-		fmt.Printf("Pipeline id: %s\n", id)
-		fmt.Printf("Image: %s\n", image)
-		fmt.Printf("Tag: %s\n", tag)
-
 		if err := updateDeployment("imt-framework-staging", image, tag); err != nil {
 			fmt.Println("Error:", err)
 			http.Error(w, "Erreur lors du déploiement", http.StatusInternalServerError)
@@ -104,6 +90,9 @@ func CdHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Requête POST traitée avec succès"))
+
+		sendJobResult(id, "Deploy", "Déploiement terminé sur imt-framework-staging", "Success")
+		finishPipeline(id)
 	} else {
 		fmt.Println("Méthode non autorisée")
 		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)

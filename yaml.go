@@ -2,21 +2,12 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"gopkg.in/yaml.v3"
-	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"strings"
 )
-
-type JobResult struct {
-	Logs   string `json:"logs"`
-	Status string `json:"status"`
-	Name   string `json:"name"`
-}
 
 type Pipeline struct {
 	StagesList []string            `yaml:"stages"`
@@ -75,40 +66,8 @@ func stagesExecution(path string, jobID string) {
 
 		finalOutput := fullOutput.String()
 		logs := fmt.Sprintf(fullOutput.String())
-		sendPostRequest(jobID, stageName, logs, status)
+		sendJobResult(jobID, stageName, logs, status)
 		fmt.Println("Output complet:")
 		fmt.Println(finalOutput)
 	}
-}
-
-func sendPostRequest(jobID, name string, logs string, status string) {
-	// Create the payload
-	payload := JobResult{
-		Name:   name,
-		Logs:   logs,
-		Status: status,
-	}
-
-	// Convert payload to JSON
-	jsonPayload, err := json.Marshal(payload)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
-
-	// Make the POST request
-	url := fmt.Sprintf("https://cicd-back.nathanaudvard.fr/v1/jobs/%s", jobID) // Update with your actual endpoint
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonPayload))
-	if err != nil {
-		fmt.Println("Error sending POST request:", err)
-		return
-	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-
-		}
-	}(resp.Body)
-
-	fmt.Println("Response status:", resp.Status)
 }
