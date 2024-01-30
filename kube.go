@@ -6,6 +6,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"strings"
 )
 
 func updateDeployment(namespace string, image string, tag string) (string, error) {
@@ -26,7 +27,7 @@ func updateDeployment(namespace string, image string, tag string) (string, error
 		panic(err)
 	}
 
-	oldImage := result.Spec.Template.Spec.Containers[0].Image
+	oldImage := strings.Split(result.Spec.Template.Spec.Containers[0].Image, "/")[1]
 
 	result.Spec.Template.Spec.Containers[0].Image = fmt.Sprintf("registry.nathanaudvard.fr/%s:%s", image, tag)
 	_, err = deploymentsClient.Update(context.TODO(), result, metav1.UpdateOptions{})
