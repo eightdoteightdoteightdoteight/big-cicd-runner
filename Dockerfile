@@ -4,6 +4,8 @@ WORKDIR /app
 RUN apt-get update
 RUN apt-get install -y maven openjdk-17-jdk unzip xz-utils zip ca-certificates
 
+RUN export PATH=$PATH:/usr/share/maven/bin
+
 RUN install -m 0755 -d /etc/apt/keyrings
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
 RUN chmod a+r /etc/apt/keyrings/docker.asc

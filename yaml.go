@@ -21,7 +21,6 @@ func (p *Pipeline) Unmarshal(data []byte) error {
 func readYaml(path string) (Pipeline, error) { // path is currently test.yml
 	yamlFile, err := os.ReadFile(path)
 	if err != nil {
-		fmt.Printf("Erreur de lecture du fichier YAML: %v\n", err)
 		return Pipeline{}, err
 	}
 
@@ -29,45 +28,45 @@ func readYaml(path string) (Pipeline, error) { // path is currently test.yml
 	err = pipeline.Unmarshal(yamlFile)
 
 	if err != nil {
-		fmt.Printf("Erreur de parsing YAML: %v\n", err)
 		return Pipeline{}, err
 	}
 
 	return pipeline, err
 }
 
-func stagesExecution(path string, jobID string) {
+func stagesExecution(path string, pipelineId string, projectName string, tag string) {
 	pipeline, err := readYaml(path)
-
-	if err != nil {
-		fmt.Println("Error:", err)
+	if errorAndFinish(err, pipelineId, "Setup", "Erreur lors de la récupération du fichier de CI") {
 		return
 	}
 
 	var fullOutput bytes.Buffer
+	i := 0
 
 	for _, stageName := range pipeline.StagesList {
-		var status string = "Success"
 		stageContent := pipeline.Stages[stageName]
 
 		for _, command := range stageContent {
-			toExec := strings.Fields(command)
-			cmd := exec.Command("cmd", append([]string{"/c", toExec[0]}, toExec[1:]...)...) //les ... permettent de traiter chaque élément de la liste individuellement
+			if strings.Contains(command, "docker push") || strings.Contains(command, "docker image push") {
+				command = strings.ReplaceAll(command, "{tag	}", tag)
+			}
+			i++
+			fmt.Println("pipeline:", i)
+			cmd := exec.Command(command)
 			output, err := cmd.CombinedOutput()
-
-			if err != nil {
-				status = "Error"
-				fmt.Println("Erreur lors de l'exécution de la commande:", string(output))
-				break
+			if errorAndFinish(err, pipelineId, stageName, "Erreur lors de l'exécution du stage") {
+				return
 			}
 
 			fullOutput.WriteString(fmt.Sprintf("%s\n %s\n", command, output))
 		}
 
 		finalOutput := fullOutput.String()
-		logs := fmt.Sprintf(fullOutput.String())
-		sendJobResult(jobID, stageName, logs, status)
+		logs := fmt.Sprintf(finalOutput)
+		sendJobResult(pipelineId, stageName, logs, "Success")
 		fmt.Println("Output complet:")
 		fmt.Println(finalOutput)
+		fullOutput.Reset()
 	}
+	cd(pipelineId, projectName, tag)
 }

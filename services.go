@@ -43,8 +43,8 @@ func sendJobResult(jobID string, name string, logs string, status string) {
 	fmt.Println("Response status:", resp.Status)
 }
 
-func finishPipeline(jobID string) {
-	url := fmt.Sprintf("http://cicd-back-service:8080/v1/pipelines/%s/finish", jobID)
+func finishPipeline(jobID string, status string) {
+	url := fmt.Sprintf("http://cicd-back-service:8080/v1/pipelines/%s/finish?status=%s", jobID, status)
 	_, err := http.Post(url, "application/json", nil)
 	if err != nil {
 		fmt.Println("Error sending POST request:", err)
