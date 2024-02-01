@@ -42,7 +42,6 @@ func execCmd(idPipeline string, stage string, errorMsg string, args ...string) [
 	cmd := exec.Command(args[0], args[1:]...)
 	output, err := cmd.CombinedOutput()
 	if errorAndFinish(err, idPipeline, stage, errorMsg) {
-		fmt.Println("Output:", string(output))
 		return nil
 	}
 	return output
@@ -50,7 +49,7 @@ func execCmd(idPipeline string, stage string, errorMsg string, args ...string) [
 
 func errorAndFinish(err error, idPipeline string, stage string, errorMsg string) bool {
 	if err != nil {
-		fmt.Println("Erreur lors de l'exécution de la commande:", err)
+		fmt.Println(errorMsg, ":", err)
 		sendJobResult(idPipeline, stage, errorMsg, "Failed")
 		finishPipeline(idPipeline, "Failed")
 		return true

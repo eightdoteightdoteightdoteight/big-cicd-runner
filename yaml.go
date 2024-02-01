@@ -34,6 +34,7 @@ func readYaml(path string) (Pipeline, error) {
 }
 
 func stagesExecution(path string, pipelineId string, projectName string, tag string) {
+	fmt.Println("pipeline:", pipelineId)
 	tag = strings.ReplaceAll(tag, "/", "-")
 	pipeline, err := readYaml(path)
 	if errorAndFinish(err, pipelineId, "Setup", "Erreur lors de la récupération du fichier de CI") {
@@ -43,7 +44,7 @@ func stagesExecution(path string, pipelineId string, projectName string, tag str
 	var fullOutput bytes.Buffer
 
 	for _, stageName := range pipeline.StagesList {
-		fmt.Println("pipeline:", stageName)
+		fmt.Println("job:", stageName)
 		stageContent := pipeline.Stages[stageName]
 
 		for _, command := range stageContent {
@@ -60,8 +61,6 @@ func stagesExecution(path string, pipelineId string, projectName string, tag str
 		finalOutput := fullOutput.String()
 		logs := fmt.Sprintf(finalOutput)
 		sendJobResult(pipelineId, stageName, logs, "Success")
-		fmt.Println("Output complet:")
-		fmt.Println(finalOutput)
 		fullOutput.Reset()
 	}
 	cd(pipelineId, projectName, tag)

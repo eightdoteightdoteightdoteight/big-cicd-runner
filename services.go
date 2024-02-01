@@ -23,14 +23,14 @@ func sendJobResult(jobID string, name string, logs string, status string) {
 
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println("Error serializing job result:", err)
 		return
 	}
 
 	url := fmt.Sprintf("http://cicd-back-service:8080/v1/jobs/%s", jobID)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonPayload))
 	if err != nil {
-		fmt.Println("Error sending POST request:", err)
+		fmt.Println("Error sending job request:", err)
 		return
 	}
 	defer func(Body io.ReadCloser) {
@@ -45,7 +45,7 @@ func finishPipeline(jobID string, status string) {
 	url := fmt.Sprintf("http://cicd-back-service:8080/v1/pipelines/%s/finish?status=%s", jobID, status)
 	_, err := http.Post(url, "application/json", nil)
 	if err != nil {
-		fmt.Println("Error sending POST request:", err)
+		fmt.Println("Error sending finish pipeline request:", err)
 		return
 	}
 }
@@ -54,7 +54,7 @@ func isHealthy(namespace, name string) bool {
 	url := fmt.Sprintf("http://%s-service.%s.svc.cluster.local:8080/actuator/health", name, namespace)
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Println("Error sending GET request:", err)
+		fmt.Println("Error getting health request for ", name, ":", err)
 		return false
 	}
 	return resp.StatusCode == http.StatusOK

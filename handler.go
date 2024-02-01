@@ -89,7 +89,6 @@ func CiCdHandler(w http.ResponseWriter, r *http.Request) {
 		pathToYaml := "big_ci.yml"
 		go stagesExecution(pathToYaml, id, repoName, tag)
 	} else {
-		fmt.Println("Méthode non autorisée")
 		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 	}
 }
@@ -118,7 +117,6 @@ func CdHandler(w http.ResponseWriter, r *http.Request) {
 
 		go cd(id, image, tag)
 	} else {
-		fmt.Println("Méthode non autorisée")
 		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 	}
 }
