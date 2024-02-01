@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
 )
 
 func main() {
@@ -35,4 +36,23 @@ func folderExists(folderPath string) (bool, error) {
 	}
 
 	return false, err
+}
+
+func execCmd(idPipeline string, stage string, errorMsg string, args ...string) []byte {
+	cmd := exec.Command(args[0], args[1:]...)
+	output, err := cmd.CombinedOutput()
+	if errorAndFinish(err, idPipeline, stage, errorMsg) {
+		return nil
+	}
+	return output
+}
+
+func errorAndFinish(err error, idPipeline string, stage string, errorMsg string) bool {
+	if err != nil {
+		fmt.Println(errorMsg, ":", err)
+		sendJobResult(idPipeline, stage, errorMsg, "Failed")
+		finishPipeline(idPipeline, "Failed")
+		return true
+	}
+	return false
 }

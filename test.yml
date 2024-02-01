@@ -1,9 +1,0 @@
-stages:
-  - stage1
-  - stage2
-stage1:
-    - echo 'stage1 command1'
-    - echo 'stage1 command2'
-stage2:
-    - echo 'stage2 command1'
-    - echo 'stage2 command2'
