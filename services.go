@@ -39,8 +39,6 @@ func sendJobResult(jobID string, name string, logs string, status string) {
 
 		}
 	}(resp.Body)
-
-	fmt.Println("Response status:", resp.Status)
 }
 
 func finishPipeline(jobID string, status string) {

@@ -36,13 +36,14 @@ func updateDeployment(namespace string, image string, tag string) (string, error
 }
 
 func cd(id string, projectName string, tag string) {
+	tag = strings.ReplaceAll(tag, "/", "-")
 	oldImage, err := updateDeployment("imt-framework-staging", projectName, tag)
 	if errorAndFinish(err, id, "Déploiement sur Kubernetes", "Erreur lors du déploiement sur Kubernetes") {
 		return
 	}
 	sendJobResult(id, "Déploiement sur Kubernetes", "Déploiement terminé sur imt-framework-staging", "Success")
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(20 * time.Second)
 
 	if health := isHealthy("imt-framework-staging", projectName); health {
 		sendJobResult(id, "Tests de santé", "Les tests de santé ont été réussis", "Success")

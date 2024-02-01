@@ -75,16 +75,13 @@ func CiCdHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		fmt.Println(1)
 		if output := execCmd(id, "Setup", "Erreur lors de la récupération du code source", "git", "fetch"); output == nil {
 			return
 		}
-		fmt.Println(2)
 		checkout := fmt.Sprintf("origin/%s", tag)
 		if output := execCmd(id, "Setup", "Erreur lors de la récupération du code source", "git", "checkout", checkout); output == nil {
 			return
 		}
-		fmt.Println(3)
 		if output := execCmd(id, "Setup", "Erreur lors de la récupération du code source", "git", "pull", "origin", tag); output == nil {
 			return
 		}
