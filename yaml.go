@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"os"
-	"os/exec"
 	"strings"
 )
 
@@ -52,12 +51,11 @@ func stagesExecution(path string, pipelineId string, projectName string, tag str
 			}
 			i++
 			fmt.Println("pipeline:", i)
-			cmd := exec.Command(command)
-			output, err := cmd.CombinedOutput()
-			if errorAndFinish(err, pipelineId, stageName, "Erreur lors de l'exécution du stage") {
+			args := strings.Fields(command)
+			output := execCmd(pipelineId, stageName, "Erreur lors de l'exécution de la commande", args...)
+			if output == nil {
 				return
 			}
-
 			fullOutput.WriteString(fmt.Sprintf("%s\n %s\n", command, output))
 		}
 
