@@ -60,5 +60,11 @@ func cd(id string, projectName string, tag string) {
 		return
 	}
 
+	service := fmt.Sprintf("http://%s-service:8080", projectName)
+	if output := execCmd(id, "Pentest", "Erreur lors de l'exécution du pentest", "nikto.pl", "-h", service); output == nil {
+		finishPipeline(id, "Failed")
+		return
+	}
+	
 	finishPipeline(id, "Success")
 }
