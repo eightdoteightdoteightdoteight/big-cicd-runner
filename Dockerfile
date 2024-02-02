@@ -3,8 +3,7 @@ FROM golang:1.21.6
 WORKDIR /app
 RUN apt-get update
 RUN apt-get install -y maven openjdk-17-jdk unzip xz-utils zip ca-certificates
-
-RUN export PATH=$PATH:/usr/share/maven/bin
+ENV PATH="$PATH:/usr/share/maven/bin"
 
 RUN install -m 0755 -d /etc/apt/keyrings
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
@@ -19,7 +18,11 @@ RUN apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugi
 
 RUN wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.16.9-stable.tar.xz
 RUN tar xf flutter_linux_3.16.9-stable.tar.xz
-RUN export PATH="$PATH:`pwd`/flutter/bin"
+ENV PATH="$PATH:/app/flutter/bin"
+
+RUN wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+RUN unzip sonar-scanner-cli-5.0.1.3006-linux.zip
+ENV PATH="$PATH:/app/sonar-scanner-5.0.1.3006-linux/bin"
 
 COPY go.mod go.sum ./
 RUN go mod download

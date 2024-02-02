@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -47,8 +48,24 @@ func stagesExecution(path string, pipelineId string, projectName string, tag str
 		fmt.Println("job:", stageName)
 		stageContent := pipeline.Stages[stageName]
 
+		os.Setenv("TAG", tag)
+		os.Setenv("SONAR_PROJECT_KEY", projectName)
+		os.Setenv("SONAR_PROJECT_VERSION", tag)
+		os.Setenv("SONAR_PROJECT_NAME", projectName)
+
 		for _, command := range stageContent {
-			command = strings.ReplaceAll(command, "{tag}", tag)
+			re, err := regexp.Compile("({([^{}]+)})")
+			if errorAndFinish(err, pipelineId, stageName, "Erreur lors de la préparation de la commande") {
+				return
+			}
+			matches := re.FindAllStringSubmatch(command, -1)
+			for _, match := range matches {
+				value := os.Getenv(match[2])
+				if value == "" {
+					continue
+				}
+				command = strings.ReplaceAll(command, match[1], value)
+			}
 			fmt.Println("command:", command)
 			args := strings.Fields(command)
 			output := execCmd(pipelineId, stageName, "Erreur lors de l'exécution de la commande", args...)

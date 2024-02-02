@@ -41,6 +41,7 @@ func folderExists(folderPath string) (bool, error) {
 func execCmd(idPipeline string, stage string, errorMsg string, args ...string) []byte {
 	cmd := exec.Command(args[0], args[1:]...)
 	output, err := cmd.CombinedOutput()
+	fmt.Println("output:", string(output))
 	if errorAndFinish(err, idPipeline, stage, errorMsg) {
 		return nil
 	}
